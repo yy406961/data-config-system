@@ -1,0 +1,219 @@
+/* 覆盖原有elementUI样式 */
+
+/* 表单相关 */
+.el-form-item__label {
+  color: #fff;
+}
+.el-input__inner {
+  background-color: transparent;
+  border: 1px solid #00B9FC;
+  color: #fff;
+}
+.el-input__inner:hover {
+  border-color: #00B9FC;
+}
+.el-select .el-input .el-select__caret {
+  color: #189FAE;
+}
+.el-select-dropdown {
+  border: 1px solid #00B9FC;
+  background-color: rgba(3,79,131,0.94);
+}
+.el-select-dropdown__item {
+  color: #02D0E7;
+}
+.el-select-dropdown__item.hover, .el-select-dropdown__item:hover {
+  background-color: #189FAE;
+  color: #FFFFFF;
+}
+.el-popper[x-placement^=bottom] .popper__arrow::after {
+  border-bottom-color: transparent;
+}
+.el-popper[x-placement^=bottom] .popper__arrow {
+  border-bottom-color: transparent;
+}
+.el-button--primary {
+  background-color: #1B98C5;
+  border-color: #1B98C5;
+}
+.el-button--primary:focus, .el-button--primary:hover {
+  background: #00B9FC;
+  border-color: #00B9FC;
+}
+.el-select-dropdown__list {
+  padding: 0;
+}
+.el-button {
+  background: #021D35;
+  border: 1px solid #00B9FC;
+  color: #fff;
+}
+.el-button--primary {
+  color: #FFF;
+  background-color: #409EFF;
+  border-color: #409EFF;
+}
+.el-button--text {
+  color: #409EFF;
+  background: 0 0;
+  padding-left: 0;
+  padding-right: 0;
+  border: none;
+}
+.el-radio__inner {
+  background-color: transparent;
+  border: 1px solid #105961;
+}
+.el-radio {
+  color: #fff;
+}
+.el-textarea__inner {
+  color: #fff;
+  background-color: transparent;
+  border: 1px solid #409EFF;
+}
+.el-textarea__inner:hover {
+  border-color: #409EFF;
+}
+
+/* 时间选择器 */
+.el-picker-panel {
+  color: #fff;
+  border: 1px solid #3CE8FA;
+  background: #143C58;
+}
+.el-date-picker__header-label {
+  color: #fff;
+}
+.el-date-table th {
+  color: #fff;
+  border-bottom: solid 1px #3D5F70;
+}
+
+/* 表格 相关 */
+.el-table {
+  color: #02D0E7;
+  border: 1px solid #00BDFF;
+  background: rgba(0,0,0,0.35);
+}
+.el-table thead {
+  color: #ddd;
+}
+.el-table th, .el-table tr {
+  background-color: rgba(0,160,233,0.15);
+}
+.el-table th>.cell {
+  padding: 6px 10px;
+}
+.el-table td, .el-table th.is-leaf {
+  border-bottom: 0px solid transparent;
+}
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+  background: rgba(0,160,233,0.15);
+}
+
+.el-table--enable-row-hover .el-table__body tr:hover>td {
+  background-color: rgba(0,160,233,0.35);
+}
+.el-table__body tr.current-row>td {
+  background-color: rgba(0,160,233,0.45);
+}
+.el-table--striped .el-table__body tr.el-table__row--striped.current-row td {
+  background-color: rgba(0,160,233,0.45);
+}
+.el-checkbox__inner {
+  border: 1px solid #105961;
+  background-color: #072A4A;
+}
+.el-checkbox__input.is-checked .el-checkbox__inner, .el-checkbox__input.is-indeterminate .el-checkbox__inner {
+  background-color: #02D0E7;
+  border-color: #02D0E7;
+}
+.el-table td, .el-table th {
+  padding: 10px 0;
+}
+.el-pagination {
+  margin-top: 10px;
+  text-align: right;
+  color: #fff;
+}
+.el-pagination__total {
+  color: #fff;
+}
+.el-pagination button:disabled {
+  background-color: transparent;
+}
+.el-pager li {
+  background: transparent;
+}
+.el-pagination .btn-next, .el-pagination .btn-prev {
+  background: center center no-repeat transparent;
+  color: #02D0E7;
+}
+.el-table--border::after, .el-table--group::after, .el-table::before {
+  background-color: transparent;
+}
+.el-table .el-button {
+  padding: 0;
+}
+/* 对话框相关 */
+
+.el-dialog {
+  background: #010102;
+  border: 1px solid #3CE8FA;
+  box-shadow: 0 0 5px 1px #3CE8FA;
+}
+
+.el-dialog__header {
+  padding: 16px 20px 16px;
+  border-bottom: 1px solid #00B9FC;
+  color: #2CD5FF;
+}
+
+.el-dialog__title {
+  color: #2CD5FF;
+}
+.el-dialog__headerbtn .el-dialog__close {
+  color: #2CD5FF;
+}
+
+/* 树形组件 tree */
+
+.el-tree {
+  background: transparent;
+  color: #02D0E7;
+}
+.el-tree-node__expand-icon {
+  color: #189FAE;
+}
+.el-tree-node__content:hover {
+  background-color: rgba(3,79,131,0.34);
+}
+.el-tree-node:focus>.el-tree-node__content {
+  background-color: rgba(3, 79, 131, 0.34);
+}
+
+/* 消息弹出框 */
+
+.el-message-box {
+  background-color: rgba(0,0,0,0.75);
+  border: 1px solid #3CE8FA;
+}
+.el-message-box__title {
+  color: #2CD5FF;
+}
+.el-message-box__content {
+  color: #fff;
+}
+.el-message-box__headerbtn .el-message-box__close {
+  color: #2CD5FF;
+}
+
+
+/* 百度地图 */
+.BMapLib_Drawing .BMapLib_box {
+  border-right: 0;
+}
+.BMapLib_Drawing_panel {
+  border: 0;
+}

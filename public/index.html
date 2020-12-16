@@ -1,0 +1,60 @@
+<!--
+ * @Author: your name
+ * @Date: 2020-11-12 10:20:01
+ * @LastEditTime: 2020-12-02 11:09:43
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \demo\public\index.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <link rel="stylesheet" media="screen" href="./css/style.css">
+    <link rel="stylesheet" type="text/css" href="./js/gis/css/map.css" />
+    <link rel="stylesheet" type="text/css" href="./js/qt/DrawingManager_min.css" />
+    <title>通信大数据服务配置平台</title>
+  </head>
+  <style>
+    #bgBox {
+      position: absolute; 
+      top: 0; 
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: url("./images/login.jpg") no-repeat center;
+      background-size: 100% 100%;
+    }
+    #particlesJs{ 
+      position: absolute; 
+      top: 0; 
+      left: 0;
+    }
+  </style>
+  <body>
+    <noscript>
+      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="bgBox">
+      <div id="particlesJs"></div>
+    </div>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+    <script src='./js/echarts.min.js'></script>
+    <script src='./js/jquery.min.js'></script>
+    <script src="./js/particles.min.js"></script>
+    <script src="./js/loginBg.js"></script>
+    <!-- 百度地图 -->
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=pr0qVszfs4d1KcXvyZgYjvGBrIv2qgx5"></script>
+    <!-- <script type="text/javascript" src="./js/gis/map_load.js"></script> -->
+    <script type="text/javascript" src="./js/qt/DrawingManager_min.js"></script>
+    <script type="text/javascript" src="./js/qt/GeoUtils_min.js"></script>
+    <script type="text/javascript" src="./js/gis/tools/CurveLine.min.js"></script>
+    <script type="text/javascript" src="./js/gis/tools/Heatmap_min.js"></script>
+    <script type="text/javascript" src="./js/gis/tools/MarkerClusterer_min.js"></script>
+    <script type="text/javascript" src="./js/gis/tools/TextIconOverlay_min.js"></script>
+  </body>
+</html>

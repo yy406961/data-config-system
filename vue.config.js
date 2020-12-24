@@ -7,17 +7,17 @@
  * @FilePath: \case-manage\vue.config.js
  */
 module.exports = {
-  // publicPath: '/api',
+  publicPath:'/keyPerson/',
   devServer: {
     disableHostCheck: true,
     port: 8080,
     proxy:{
       '/api':{
-        target: 'http://192.168.1.195:80',
-        // target: 'http://192.168.1.118:8073',
+        target: 'http://15.15.11.128:8988',
+        // target: 'http://15.15.11.21:8988',
         changeOrigin: true,
         pathRewrite:{
-          '^/api': 'api',
+          '^/api': 'keyBigDate',
           // '^/api': '',
         }
       }

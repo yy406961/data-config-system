@@ -41,7 +41,7 @@ export default {
         },
         { 
           name: '配置管理',
-          path: '/bigdata/configManagement',
+          path: '',
           children: [
             {
               name: '关注人员CDR配置',

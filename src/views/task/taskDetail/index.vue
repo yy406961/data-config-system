@@ -39,7 +39,8 @@
         <span class="detailLable">相关凭证：</span>
         <span v-for="(item, index) in detailDescribe.credential" 
           :key="'credential'+ index"
-          class="credentialFile">
+          class="credentialFile"
+          @click="credentialDownload(item)">
           <img src="@/assets/img/task/file.png" alt="">
           {{ item }}
         </span>
@@ -64,12 +65,12 @@
             任务目标区域：<span class="targetNum">{{ item.kaCount }}</span> 个
           </div>
           <div class="contentItem" v-if="item.assemble">
-            任务聚集阈值：<span class="targetNum">{{ item.assemble }}</span> 个
+            任务聚集阈值：<span class="targetNum">{{ item.assemble }}</span> 人
           </div>
-          <div class="contentItem" v-if="item.level && item.tid === 3">
+          <div class="contentItem" v-if="item.level && item.tid === '3'">
             任务漫出级别：<span class="level">{{ item.level }}</span>
           </div>
-          <div class="contentItem" v-if="item.level && item.tid === 4">
+          <div class="contentItem" v-if="item.level && item.tid === '4'">
             任务漫入级别：<span class="level">{{ item.level }}</span>
           </div>
         </div>
@@ -95,17 +96,17 @@
     <!-- 查看 新增 配置 -->
     <div class="checkConfig" v-if="checkConfig">
       <!-- 进入重点场所预警 -->
-      <enterArea v-if="showConfig === 1" @warnConfig="warnConfig"></enterArea>
+      <enterArea v-if="showConfig === '1'" @warnConfig="warnConfig"></enterArea>
       <!-- 离开指定场所预警 -->
-      <enterArea v-if="showConfig === 2" @warnConfig="warnConfig"></enterArea>
+      <enterArea v-if="showConfig === '2'" @warnConfig="warnConfig"></enterArea>
       <!-- 人员漫出预警 -->
-      <personOut v-if="showConfig === 3" @warnConfig="warnConfig"></personOut>
+      <personOut v-if="showConfig === '3'" @warnConfig="warnConfig"></personOut>
       <!-- 人员漫入预警 -->
-      <personOut v-if="showConfig === 4" @warnConfig="warnConfig"></personOut>
+      <personOut v-if="showConfig === '4'" @warnConfig="warnConfig"></personOut>
       <!-- 人员聚集预警 -->
-      <personGather v-if="showConfig === 5" @warnConfig="warnConfig"></personGather>
+      <personGather v-if="showConfig === '5'" @warnConfig="warnConfig"></personGather>
       <!-- 重点人员异常行为预警 -->
-      <personUnusual v-if="showConfig === 6" @warnConfig="warnConfig"></personUnusual>
+      <personUnusual v-if="showConfig === '6'" @warnConfig="warnConfig"></personUnusual>
     </div>
 
     <!-- 新增预警 -->
@@ -132,29 +133,29 @@
 
 
 <script>
-import { taskDetails } from '@/api/task'
+import { taskDetails, downloadTask } from '@/api/task'
 export default {
   name: "taskDetail",
   data() {
     return {
       taskNum: '',
       detailDescribe: {
-        taskNum: '20200212',
-        taskName: 'FK预警任务',
-        serviceUnit: 'FK总队',
-        createTimes: '2020-11-24',
-        endTimes: '2020-11-24',
-        state: '启动中',
-        pushType: 'FTP文件流',
-        credential: ['文书1', '文书2', '文书3']
+        taskNum: '',
+        taskName: '',
+        serviceUnit: '',
+        createTimes: '',
+        endTimes: '',
+        state: '',
+        pushType: '',
+        credential: []
       },
       detailData: [
-        { warnType: '进入重点场所预警', kpCount: '24531', kaCount: '2', tid: 1 },
-        { warnType: '离开指定场所预警', kpCount: '24531', kaCount: '3', tid: 2 },
-        { warnType: '人员漫出预警', kpCount: '24531', level: '省级', tid: 3 },
-        { warnType: '人员漫入预警', kpCount: '24531', level: '省级', tid: 4 },
-        { warnType: '人员聚集预警', kpCount: '24531', assemble: '3', tid: 5 },
-        { warnType: '重点人员异常行为预警', kpCount: '24531', tid: 6 },
+        // { warnType: '进入重点场所预警', kpCount: '24531', kaCount: '2', tid: 1 },
+        // { warnType: '离开指定场所预警', kpCount: '24531', kaCount: '3', tid: 2 },
+        // { warnType: '人员漫出预警', kpCount: '24531', level: '省级', tid: 3 },
+        // { warnType: '人员漫入预警', kpCount: '24531', level: '省级', tid: 4 },
+        // { warnType: '人员聚集预警', kpCount: '24531', assemble: '3', tid: 5 },
+        // { warnType: '重点人员异常行为预警', kpCount: '24531', tid: 6 },
       ],
       totalPageNum: 0,
       currentData: [],
@@ -167,12 +168,12 @@ export default {
         warnType: ''
       },
       warnTypeList: [
-        { warnType: '进入重点场所预警', tid: 1 },
-        { warnType: '离开指定场所预警', tid: 2 },
-        { warnType: '人员漫出预警', tid: 3 },
-        { warnType: '人员漫入预警', tid: 4 },
-        { warnType: '人员聚集预警', tid: 5 },
-        { warnType: '重点人员异常行为预警', tid: 6 },
+        { warnType: '进入重点场所预警', tid: '1' },
+        { warnType: '离开指定场所预警', tid: '2' },
+        { warnType: '人员漫出预警', tid: '3' },
+        { warnType: '人员漫入预警', tid: '4' },
+        { warnType: '人员聚集预警', tid: '5' },
+        { warnType: '重点人员异常行为预警', tid: '6' },
       ]
     }
   },
@@ -199,7 +200,7 @@ export default {
       this.taskNum = this.$route.params.taskNum
       sessionStorage.setItem('taskNum',  this.$route.params.taskNum)
     } else {
-      this.taskNum = parseInt(sessionStorage.getItem('taskNum'))
+      this.taskNum = sessionStorage.getItem('taskNum')
     }
     this.getTaskDetails()
   },
@@ -211,17 +212,34 @@ export default {
       }).then( res => {
         let { data } = res
         // stutas 任务状态，0关闭，1启动，2暂停
-        if (data.stutas === 0) {
+        if (data.stutas === '0') {
           data.state = '已关闭'
-        } else if (data.stutas === 1) {
+        } else if (data.stutas === '1') {
           data.state = '启动中'
-        } else if (data.stutas === 2) {
+        } else if (data.stutas === '2') {
           data.state = '暂停中'
         } 
+        data.credential = data.proof.split(',')
         this.detailDescribe = data
         this.detailData = data.warnIntoVOList
         this.getTotalPageNum()
         this.getCurrentData(1)
+      })
+    },
+    // 相关凭证下载
+    credentialDownload(name) {
+      downloadTask({
+        fileName: name
+      }).then(res=>{
+        let blob = new Blob([res], {type: "application/vnd.ms-excel,charset=utf-8"});// 创建一个类文件对象：Blob对象表示一个不可变的、原始数据的类文件对象
+        const elink = document.createElement('a')// 创建一个a标签
+        elink.download = name;// 设置a标签的下载属性
+        elink.style.display = 'none';// 将a标签设置为隐藏
+        elink.href = URL.createObjectURL(blob);// 把之前处理好的地址赋给a标签的href
+        document.body.appendChild(elink);// 将a标签添加到body中
+        elink.click();// 执行a标签的点击方法
+        URL.revokeObjectURL(elink.href) // 下载完成释放URL 对象
+        document.body.removeChild(elink)// 移除a标签
       })
     },
     // 获取总页数
@@ -271,6 +289,7 @@ export default {
     // 关闭预警配置
     warnConfig(val) {
       this.checkConfig = val
+      this.getTaskDetails()
     }
   },
   destroyed () {
@@ -301,7 +320,7 @@ export default {
       height: 35px;
       line-height: 35px;
       &:last-child {
-        width: 40%;
+        width: 55%;
       }
       .detailLable {
         color: #84C1FF;
@@ -367,7 +386,7 @@ export default {
       .content {
         text-align: center;
         background: url("~@/assets/img/task/cardContent.png") no-repeat center;
-        background-size: 100% 100%;
+        background-size: 100% 101%;
         height: calc(100% - 40px - 40px);
         .contentItem {
           color: #84C1FF;

@@ -16,6 +16,7 @@
 </template>
 
 <script>
+import { uliList } from '@/api/config'
 import BMapLib from 'BMapLib'
 const CIRCLE = './js/gis/images/red.png'
 export default {
@@ -132,10 +133,10 @@ export default {
     // 鼠标画图时触发的方法
     overlaycomplete(e) {
       if (this.overlays.length === 1) {
-          this.$message.warning('每次只能框选一个区域,请清楚已框选区域后重新框选')
-          this.editMap()
-          this.map.removeOverlay(e.overlay);
-          return;
+        this.$message.warning('每次只能框选一个区域,请清楚已框选区域后重新框选')
+        this.editMap()
+        this.map.removeOverlay(e.overlay);
+        return;
       }
       // 获取鼠标画图工具（圆形、多边形）
       this.drawingMode = e.drawingMode
@@ -144,6 +145,8 @@ export default {
       this.getOverlay = e.overlay
       // 关闭画图工具(关闭之后才可以进行编辑图形操作)
       this.editMap()
+      // 画完区域后获取区域的基站点
+      this.getUliData()
     },
     editMap() {
       this.drawingManager.close()
@@ -153,10 +156,19 @@ export default {
     isDrawingState() {
       if (this.drawingManager) return this.drawingManager._isOpen
     },
+    // // 画完区域后获取区域的基站点
+    getUliData() {
+      this.areaBorder = this.getOverLayData()
+      uliList(this.areaBorder).then( res => {
+        if (res.data.length) {
+          this.drawPoint(res.data)
+        }
+      })
+    },
     // 清除所有覆盖物
     clearAll() {
       for (var i = 0; i < this.overlays.length; i++) {
-          this.map.removeOverlay(this.overlays[i])
+        this.map.removeOverlay(this.overlays[i])
       }
       this.overlays.length = 0
       this.clearOption = true
@@ -175,11 +187,11 @@ export default {
             let radius = this.getOverlay.getRadius()
             let lng = this.getOverlay.getCenter().lng
             let lat = this.getOverlay.getCenter().lat
-            let area = 3.1415926 * radius * radius / 1000000
+            // let area = 3.1415926 * radius * radius / 1000000
             let pathObj = {
-                radius,
-                coordinates: `${lng} ${lat}`,
-                acreage: area
+              radius: radius + '',
+              areaCoverage: `${lng} ${lat}`,
+              // acreage: area
             }
             return pathObj
           } else {
@@ -192,11 +204,11 @@ export default {
             })
             // 获取多边形的面积
             let ply = new BMap.Polygon(path)
-            let area = BMapLib.GeoUtils.getPolygonArea(ply) / 1000000
+            // let area = BMapLib.GeoUtils.getPolygonArea(ply) / 1000000
             let pathObj = {
-                radius: 0,
-                coordinates: arr.join(','),
-                acreage: area
+              radius: '0',
+              areaCoverage: arr.join(','),
+              // acreage: area
             }
             return pathObj
           }
@@ -215,22 +227,7 @@ export default {
       })
       // 打点
       if (markData.length) {
-        this.map.enableScrollWheelZoom()
-          for (let i = 0; i < markData.length; i++) {
-              // let itemPoint = JSON.parse(markData[i])
-              let itemPoint = markData[i]
-              if (itemPoint) {
-                  let { lat, lon } = itemPoint
-                  let myIcon = new BMap.Icon(this.icon[0], new BMap.Size(25, 29))
-                  let point = new BMap.Point(Number(lon), Number(lat))
-                  let marker = new BMap.Marker(point, { icon: myIcon })
-                  this.map.addOverlay(marker)
-                  // let me = this
-                  // marker.addEventListener('click', function(e) {
-                  //     me.showDetail(itemPoint, e.target)
-                  // })
-              }
-          }
+        this.drawPoint(markData)
       }
       let mapData = []
       // 画区域边界
@@ -251,7 +248,7 @@ export default {
                   lat: borderData.lat
               }
               // 创建圆形
-              this.circle = new BMap.Circle(pointCircle, borderData.radius, this.styleOptions)
+              this.circle = new BMap.Circle(pointCircle, option.radius, this.styleOptions)
               // 添加圆形覆盖物
               this.map.addOverlay(this.circle)
               // 将覆盖物push到overlays里面（判断覆盖物的个数）
@@ -266,18 +263,37 @@ export default {
                 this.map.enableScrollWheelZoom()
                 let points = []
                 for (var i = 0; i < mapData.length; i++) {
-                    points.push(
-                        new BMap.Point(
-                            mapData[i].lon,
-                            mapData[i].lat
-                        )
+                  points.push(
+                    new BMap.Point(
+                      mapData[i].lon,
+                      mapData[i].lat
                     )
+                  )
                 }
                 this.polygon = new BMap.Polygon(points, this.styleOptions) // 创建多边形
                 this.map.addOverlay(this.polygon)
                 this.overlays.push(this.polygon)
               }
           }
+      }
+    },
+    // 画点
+    drawPoint(markData) {
+      this.map.enableScrollWheelZoom()
+      for (let i = 0; i < markData.length; i++) {
+        // let itemPoint = JSON.parse(markData[i])
+        let itemPoint = markData[i]
+        if (itemPoint) {
+          let { lat, lon } = itemPoint
+          let myIcon = new BMap.Icon(this.icon[0], new BMap.Size(25, 29))
+          let point = new BMap.Point(Number(lon), Number(lat))
+          let marker = new BMap.Marker(point, { icon: myIcon })
+          this.map.addOverlay(marker)
+          // let me = this
+          // marker.addEventListener('click', function(e) {
+          //     me.showDetail(itemPoint, e.target)
+          // })
+        }
       }
     },
     // 多边形区域可修改
@@ -301,11 +317,20 @@ export default {
         path.forEach(item => {
           arr.push(`${item.lng} ${item.lat}`)
         })
-        return arr.join(',')
+        let pathObj = {
+          radius: '0',
+          areaCoverage: arr.join(',')
+        }
+        return pathObj
       } else if (this.circle) {
         let lng = this.circle.getCenter().lng
         let lat = this.circle.getCenter().lat
-        return `${lng} ${lat}`
+        let radius = this.circle.getRadius()
+        let pathObj = {
+          radius: radius + '',
+          areaCoverage: `${lng} ${lat}`
+        }
+        return pathObj
       } else {
         return null
       }

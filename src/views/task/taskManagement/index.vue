@@ -84,20 +84,23 @@
             <el-input v-model="ruleForm.taskName" placeholder="请输入"></el-input>
         </el-form-item>
         <el-form-item label="服务单位" prop="serviceUnit">
-            <el-input v-model="ruleForm.serviceUnit" placeholder="请输入"></el-input>
+          <el-select v-model="ruleForm.serviceUnit" placeholder="请选择">
+            <el-option  v-for="(item, index) in unitList" :key="index + 'unit'"
+              :label="item" :value="item"></el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="结束时间" prop="endTimes">
           <el-date-picker v-model="ruleForm.endTimes" 
-            type="date" 
-            format="yyyy-MM-dd" 
-            value-format="yyyy-MM-dd" 
+            type="datetime" 
+            format="yyyy-MM-dd HH:mm:ss" 
+            value-format="yyyy-MM-dd HH:mm:ss" 
             placeholder="请输入">
           </el-date-picker>
         </el-form-item>
         <el-form-item label="推送方式" prop="pushType">
           <el-select v-model="ruleForm.pushType" placeholder="请选择">
-            <el-option label="文件" value="文件"></el-option>
-            <el-option label="数据" value="数据"></el-option>
+            <el-option label="FTP文件流" value="FTP文件流"></el-option>
+            <!-- <el-option label="数据" value="数据"></el-option> -->
           </el-select>
         </el-form-item>
         <el-form-item label="相关凭据:">
@@ -123,7 +126,7 @@
 </template>
 
 <script>
-import { taskInfoAll, taskInfoAdd, fileUpload, taskPause, taskShut } from '@/api/task'
+import { taskInfoAll, taskInfoAdd, fileUpload, taskPause, taskShut, serviceUigt } from '@/api/task'
 export default {
   name: "statistic",
   components: {
@@ -140,7 +143,7 @@ export default {
         pageSize: 5,
         pageNum: 1
       },
-      tableCount: 10,
+      tableCount: 0,
       currentPage: 1,
       dialogVisible: false,
       ruleForm: {
@@ -149,6 +152,7 @@ export default {
         endTimes: '',
         pushType: ''
       },
+      unitList: [],
       fileList: [],
       rules: {
         taskName: [
@@ -176,30 +180,37 @@ export default {
   },
   mounted() {
     this.getTableData()
+    this.getUnitData()
   },
   methods: {
+    // 获取服务单位数据
+    getUnitData() {
+      serviceUigt().then( res => {
+        this.unitList = res.data
+      })
+    },
     // 获取表格数据
     getTableData() {
-      this.listData = [
-        { taskNum: '202000101', taskName: 'FK任务', serviceUnit: 'FK总队', state: '启动中', createTimes: '2020-11-23', endTimes: '2021-11-23'},
-        { taskNum: '202000102', taskName: 'FK任务', serviceUnit: 'FK总队', state: '启动中', createTimes: '2020-11-23', endTimes: '2021-11-23'},
-        { taskNum: '202000103', taskName: 'FK任务', serviceUnit: 'FK总队', state: '启动中', createTimes: '2020-11-23', endTimes: '2021-11-23'},
-        { taskNum: '202000104', taskName: 'FK任务', serviceUnit: 'FK总队', state: '暂停中', createTimes: '2020-11-23', endTimes: '2021-11-23'},
-      ]
+      // this.listData = [
+      //   { taskNum: '202000101', taskName: 'FK任务', serviceUnit: 'FK总队', state: '启动中', createTimes: '2020-11-23', endTimes: '2021-11-23'},
+      //   { taskNum: '202000102', taskName: 'FK任务', serviceUnit: 'FK总队', state: '启动中', createTimes: '2020-11-23', endTimes: '2021-11-23'},
+      //   { taskNum: '202000103', taskName: 'FK任务', serviceUnit: 'FK总队', state: '启动中', createTimes: '2020-11-23', endTimes: '2021-11-23'},
+      //   { taskNum: '202000104', taskName: 'FK任务', serviceUnit: 'FK总队', state: '暂停中', createTimes: '2020-11-23', endTimes: '2021-11-23'},
+      // ]
       taskInfoAll(Object.assign(this.params, this.query)).then( res => {
         // stutas 任务状态，0关闭，1启动，2暂停
-        let { data, count } = res
+        let { data, total } = res
         data.forEach(item => {
-          if (item.stutas === 0) {
+          if (item.stutas === '0') {
             item.state = '已关闭'
-          } else if (item.stutas === 1) {
+          } else if (item.stutas === '1') {
             item.state = '启动中'
-          } else if (item.stutas === 2) {
+          } else if (item.stutas === '2') {
             item.state = '暂停中'
           }  
         })
         this.listData = data
-        this.tableCount = parseInt(count)
+        this.tableCount = parseInt(total)
       })
     },
     // 查询
@@ -220,13 +231,14 @@ export default {
     //文件上传
     getAttachmentAdd(params) {
       let file = new FormData()
-      file.append('files',params.file)
+      file.append('file',params.file)
       fileUpload(file).then( res => {
-        if (res.code === '200') {
-          res.data.forEach( item => {
-            this.fileList.push({ name: item })
-          })
-        }
+        this.fileList.push({ name: res.data })
+        // if (res.code === '200') {
+        //   res.data.forEach( item => {
+        //     this.fileList.push({ name: item })
+        //   })
+        // }
       })
     },
     //文件删除
@@ -237,8 +249,13 @@ export default {
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          taskInfoAdd(this.ruleForm).then( res => {
-            this.$message.success(res.msg)
+          let arr = []
+          this.fileList.forEach(item => {
+            arr.push(item.name)
+          })
+          taskInfoAdd(Object.assign(this.ruleForm, {
+            proof: arr.join(',')
+          })).then( res => {
             this.dialogVisible = false
             this.getTableData()
           })
@@ -250,7 +267,8 @@ export default {
     },
     // 弹窗关闭
     dialogClosed() {
-        this.$refs.ruleForm.resetFields()
+      this.$refs.ruleForm.resetFields()
+      this.fileList = []
     },
     // 详情
     taskDetail(row) {
@@ -264,7 +282,7 @@ export default {
         taskPause({
           taskNum: row.taskNum,
         }).then( res => {
-          this.$message.success(res.msg)
+          // this.$message.success(res.msg)
           this.getTableData()
         })
       }).catch(() => {
@@ -279,7 +297,7 @@ export default {
         taskShut({
           taskNum: row.taskNum,
         }).then( res => {
-          this.$message.success(res.msg)
+          // this.$message.success(res.msg)
           this.getTableData()
         })
       }).catch(() => {

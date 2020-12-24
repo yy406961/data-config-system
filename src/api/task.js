@@ -8,6 +8,7 @@
  */
 import { fetchGet, fetchPost } from '@/common/axios.js'
 import { uploadPost } from '@/common/upload.js'
+import { downloadPost } from '@/common/download.js'
 
 /**
  * 任务管理 
@@ -36,8 +37,14 @@ export const taskDetails = params => fetchPost('/taskInfo/taskDetails', params)
 // 新增预警
 export const warnAdd = params => fetchPost('/warnInto/warnAdd', params)
 
+// 修改预警信息
+export const updateWarnTask = params => fetchPost('/warnInto/updateWarnTask', params)
+
 // 获取所有重点人员名单
 export const getKeyPersons = params => fetchPost('/warnInto/getKeyPersons', params)
+
+// 获取所有服务单位
+export const serviceUigt = params => fetchPost('/warnInto/serviceUigt', params)
 
 // 获取所有重点区域
 export const getKeyArea = params => fetchPost('/warnInto/getKeyArea', params)
@@ -56,3 +63,15 @@ export const queryTaskNumKA = params => fetchPost('/warnInto/queryTaskNumKA', pa
 
 // 按任务编号预警类型查看预警消息
 export const queryWarn = params => fetchPost('/warnInto/queryWarn', params)
+
+// 任务详情凭证下载
+export const downloadTask = params => downloadPost('/taskInfo/downloadTask', params)
+
+// 根据任务编号预警类型重点人ID删除重点人
+export const deleteTaskKP = params => fetchPost('/warnInto/deleteTaskKP', params)
+
+// 根据任务编号预警类型重点区域编号删除重点区域
+export const deleteTaskKeyArea = params => fetchPost('/warnInto/deleteTaskKeyArea', params)
+
+// 获取湖南所有市的名称
+export const hnCity = params => fetchGet('/warnInto/hnCity', params)

@@ -13,10 +13,10 @@ import router from "@/router";
 import { showLoading, hideLoading } from '@/util/loading'
 
 const service = axios.create({
-  baseURL: '/api',
+  baseURL: '/keyBigDate',
   responseType: 'blob',
   // baseURL: 'http://rap2api.taobao.org/app/mock/268576/',
-  timeout: 3000,
+  timeout: 8000,
   withCredentials: true
 })
 
@@ -67,4 +67,8 @@ const request = (method, url, data, config = {}) => {
 
 export function download(url, params, config = {}) {
   return request('get', (url + '?' + QS.stringify(params)), params, config)
+}
+
+export function downloadPost(url, params, config = {}) {
+  return request('post', url, QS.stringify(params, {allowDots: true}), config)
 }

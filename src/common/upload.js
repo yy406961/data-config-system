@@ -11,17 +11,14 @@ import router from "@/router";
 import QS from 'qs'
 
 let upload =axios.create({
-    baseURL: '/api',
+    baseURL: '/keyBigDate',
     // baseURL: 'http://rap2api.taobao.org/app/mock/268576/';
-    timeout: 6000,
+    timeout: 8000,
     withCredentials: true
 })
 
 upload.interceptors.request.use(config => {
     config.headers['Content-Type'] = 'multipart/form-data';
-    if (localStorage.getItem('token')) {
-      config.headers.Authorization = localStorage.getItem('token');
-    }
     return config;
 }, error => {
     return Promise.reject(error);

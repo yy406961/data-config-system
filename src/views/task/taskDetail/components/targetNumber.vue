@@ -9,7 +9,7 @@
 <template>
   <div class="targetNumber flex justify-between">
     <div class="treePart">
-      <div class="treeTitle">人员结构树</div>
+      <div class="treeTitle">服务单位</div>
       <div class="treeContent">
         <el-tree
           show-checkbox
@@ -30,6 +30,9 @@
           </el-form-item>
           <el-form-item label="手机号码:" prop="kpMsisdn">
             <el-input v-model="query.kpMsisdn" placeholder="请输入"></el-input>
+          </el-form-item>
+          <el-form-item label="关注人员类型:" prop="kpTypes">
+            <el-input v-model="query.kpTypes" placeholder="请输入"></el-input>
           </el-form-item>
           <el-form-item>
             <el-button class="hvr-glow" size="mini" type="primary" @click="userQuery">查询</el-button>
@@ -65,7 +68,7 @@
 </template>
 
 <script>
-import { getKeyPersons } from '@/api/task'
+import { getKeyPersons, serviceUigt } from '@/api/task'
 export default {
   name: "targetNumber",
   data() {
@@ -73,11 +76,12 @@ export default {
       structureData: [],
       defaultProps: {
         children: 'children',
-        label: 'kpType'
+        label: 'unit'
       },
       query: {
         kpName: '',
         kpMsisdn: '',
+        kpTypes: ''
       },
       tableChosed: [],
       listData: [],
@@ -93,47 +97,54 @@ export default {
   },
   mounted() {
     this.getStructureData()
-    // this.getTableData()
+    this.getTableData()
   },
   methods: {
-    // 获取人员结构树数据
+    // 获取服务单位数据
     getStructureData() {
-      this.structureData = [
-        {
-          id: 1,
-          kpType: '涉稳',
-        },
-        {
-          id: 2,
-          kpType: '涉毒',
-        },
-        {
-          id: 3,
-          kpType: '反恐',
-        }
-      ]
+      // this.structureData = [
+      //   {
+      //     id: 1,
+      //     unit: '涉稳',
+      //   },
+      //   {
+      //     id: 2,
+      //     unit: '涉毒',
+      //   },
+      //   {
+      //     id: 3,
+      //     unit: '反恐',
+      //   }
+      // ]
+      serviceUigt().then( res => {
+        let { data } = res
+        let arr = []
+        data.forEach((item, index) => {
+          arr.push({
+            id: item,
+            unit: item
+          })
+        })
+        this.structureData = arr
+      })
     },
     // 结构树点击事件
     checkChange(index, data) {
-      console.log('aaaaaaaaa', data)
       this.getTableData(data.checkedKeys)
     },
     // 获取表格数据
-    getTableData(kpType) {
-      this.listData = [
-        { kpName: 'aa1', idCard: '123', kpType: '军1', kpMsisdn: '222'},
-        { kpName: 'aa2', idCard: '123', kpType: '军1', kpMsisdn: '222'},
-        { kpName: 'aa3', idCard: '123', kpType: '军1', kpMsisdn: '222'},
-        { kpName: 'aa4', idCard: '123', kpType: '军1', kpMsisdn: '222'},
-        { kpName: 'aa5', idCard: '123', kpType: '军1', kpMsisdn: '222'}
-      ]
+    getTableData(serviceUnits) {
+      // this.listData = [
+      //   { kpName: 'aa1', idCard: '123', kpType: '军1', kpMsisdn: '222'},
+      //   { kpName: 'aa2', idCard: '123', kpType: '军1', kpMsisdn: '222'},
+      // ]
       getKeyPersons(Object.assign(this.params, this.query, {
         taskNum: this.taskNum,
-        kpType: kpType
+        serviceUnits
       })).then( res => {
-        let { data, count } = res
+        let { data, total } = res
         this.listData = data
-        this.tableCount = parseInt(count)
+        this.tableCount = parseInt(total)
       })
     },
     // 表格选择框

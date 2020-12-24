@@ -76,6 +76,20 @@
   border-color: #409EFF;
 }
 
+.el-upload-list__item-name {
+  color: #ddd;
+}
+.el-upload-list__item:hover {
+  background-color: #666;
+}
+.el-upload-list__item .el-icon-close {
+  color: #fff;
+}
+
+.el-upload-list__item-name [class^=el-icon] {
+  color: #ddd;
+}
+
 /* 时间选择器 */
 .el-picker-panel {
   color: #fff;
@@ -88,6 +102,13 @@
 .el-date-table th {
   color: #fff;
   border-bottom: solid 1px #3D5F70;
+}
+.el-date-picker__time-header {
+  border-bottom: 0;
+}
+.el-picker-panel__footer {
+  border-top: 0;
+  background: #143C58;
 }
 
 /* 表格 相关 */

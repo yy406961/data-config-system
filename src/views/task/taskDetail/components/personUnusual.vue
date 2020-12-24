@@ -32,9 +32,9 @@
             @selection-change="numberSelection">
             <el-table-column type="selection" width="45"></el-table-column>
             <el-table-column type="index" label="序号" width="55" align="center"></el-table-column>
-            <el-table-column label="姓名" prop="name" align="center"></el-table-column>
-            <el-table-column label="手机号码" prop="phone" align="center"></el-table-column>
-            <el-table-column label="关注人员类型" prop="type" align="center"></el-table-column>
+            <el-table-column label="姓名" prop="kpName" align="center"></el-table-column>
+            <el-table-column label="手机号码" prop="kpMsisdn" align="center"></el-table-column>
+            <el-table-column label="关注人员类型" prop="kpType" align="center"></el-table-column>>
           </el-table>
           <el-pagination
             :page-size="1"
@@ -53,7 +53,7 @@
           </div>
           <div class="divPart" :style="divPart">
             <el-checkbox-group v-model="checkList">
-              <el-checkbox  v-for="(item, index) in unusualCofig" :key="index + 'config'"
+              <el-checkbox  v-for="(item, index) in unusualCofig" :key="item"
                 :label="index">{{ item }}</el-checkbox>
             </el-checkbox-group>
           </div>
@@ -67,11 +67,20 @@
       <el-button class="hvr-glow" size="mini" type="primary" @click="addConfig">保 存</el-button>
       <el-button class="hvr-glow" size="mini" @click="goback">取 消</el-button>
     </div>
+    <!-- 目标号码新增  -->
+    <el-dialog title="添加任务目标号码" :visible.sync="dialogVisible" width="100%" top="10vh">
+      <targetNumber @numberAdd="numberAdd"></targetNumber>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="mini" type="primary" @click="submitForm">确 定</el-button>
+        <el-button size="mini" @click="dialogVisible = false">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { addKeyperson, queryTaskNumKP, queryWarn, warnAdd } from '@/api/task'
+import { addKeyperson, queryTaskNumKP, queryWarn, warnAdd, updateWarnTask,
+  deleteTaskKP } from '@/api/task'
 export default {
   name: "personUnusual",
   data() {
@@ -122,7 +131,7 @@ export default {
     this.warnTypeId = sessionStorage.getItem('warnTypeId')
     this.text = this.warnTypeId === '3' ? '漫出' : '漫入'
     this.warnHandle = sessionStorage.getItem('warnHandle')
-    this.taskNum = parseInt(sessionStorage.getItem('taskNum'))
+    this.taskNum = sessionStorage.getItem('taskNum')
     if (this.warnHandle === '修改') {
       this.getNumberData()
       this.getQueryWarnInfo()
@@ -131,20 +140,17 @@ export default {
   methods: {
     // 任务目标号码 获取表格数据
     getNumberData() {
-      this.numberData = [
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-      ]
+      // this.numberData = [
+      //   { name: 'aa', phone: '123', type: 'a' },
+      //   { name: 'aa', phone: '123', type: 'a' },
+      // ]
       queryTaskNumKP(Object.assign(this.numberParams, {
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
       })).then( res => {
-        let { data, count } = res
+        let { data, total } = res
         this.numberData = data
-        this.numberTableCount = parseInt(count)
+        this.numberTableCount = parseInt(total)
       })
     },
     // 任务目标号码 表格选择框
@@ -156,12 +162,12 @@ export default {
       this.numberParams.pageSize = val
       this.numberTableCount = 1
       this.numberParams.pageNum = 1
-      this.getTableData()
+      this.getNumberData()
     },
     numberCurrentChange(val) {
       this.numberParams.pageNum = val
       this.numberTableCount = val
-      this.getTableData()
+      this.getNumberData()
     },
     // 新增目标号码
     addNumber() {
@@ -181,28 +187,30 @@ export default {
       }
       let kpids = []
       this.numberAddChosed.forEach(item => {
-        kpids.push(item.kpName)
+        kpids.push(item.id)
       })
       addKeyperson({
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
         kpids
       }).then( res => {
-        this.$message.success(res.msg)
         this.dialogVisible = false
         this.getNumberData()
       })
-      // this.$message.success('新增成功')
-      // this.dialogVisible = false
-      // this.getNumberData()
     },
-    // 获取任务聚集阀值
+    // 获取任务异常配置
     getQueryWarnInfo() {
       queryWarn({
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
       }).then( res => {
-        this.checkList = res.data.behavior.split(',')
+        let arr = res.data.behavior.split(',')
+        arr.forEach(item => {
+          let index = this.unusualCofig.indexOf(item)
+          if (index !== -1) {
+            this.checkList.push(index)
+          }
+        })
       })
     },
     // 删除目标号码
@@ -212,26 +220,41 @@ export default {
         this.$message.warning('请至少选择一条数据')
         return
       }
-      this.$message.success('删除成功')
-      this.getNumberData()
+      let kpIds = []
+      this.numberChosed.forEach(item => {
+        kpIds.push(item.id)
+      })
+      deleteTaskKP({
+        taskNum: this.taskNum,
+        warnType: this.warnTypeId,
+        kpIds
+      }).then( res => {
+        this.getNumberData()
+      })
     },
     // 保存
     addConfig() {
-      console.log(this.checkList)
-      let behavior = this.checkList.join(',')
+      let arr = []
+      this.checkList.forEach(item => {
+        arr.push(this.unusualCofig[item])
+      })
+      let behavior = arr.join(',')
       if (this.warnHandle === '新增') {
         warnAdd({
           taskNum: this.taskNum,
           warnType: this.warnTypeId,
           behavior
         }).then( res => {
-          this.$message.success(res.msg)
           this.$emit('warnConfig', false)
         })
       } else {
-        // 修改应该也有接口
-        this.$message.success('新增成功')
-        this.$emit('warnConfig', false)
+        updateWarnTask({
+          taskNum: this.taskNum,
+          warnType: this.warnTypeId,
+          behavior
+        }).then( res => {
+          this.$emit('warnConfig', false)
+        })
       }
     },
     // 取消
@@ -240,6 +263,7 @@ export default {
     }
   },
   components: {
+    targetNumber: () => import('./targetNumber')
   }
 }
 </script>

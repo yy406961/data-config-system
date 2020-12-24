@@ -33,9 +33,9 @@
             @selection-change="numberSelection">
             <el-table-column type="selection" width="45"></el-table-column>
             <el-table-column type="index" label="序号" width="55" align="center"></el-table-column>
-            <el-table-column label="姓名" prop="name" align="center"></el-table-column>
-            <el-table-column label="手机号码" prop="phone" align="center"></el-table-column>
-            <el-table-column label="关注人员类型" prop="type" align="center"></el-table-column>
+            <el-table-column label="姓名" prop="kpName" align="center"></el-table-column>
+            <el-table-column label="手机号码" prop="kpMsisdn" align="center"></el-table-column>
+            <el-table-column label="关注人员类型" prop="kpType" align="center"></el-table-column>
           </el-table>
           <el-pagination
             :page-size="1"
@@ -62,8 +62,8 @@
               </el-form-item>
               <el-form-item label="省份/城市:" prop="city">
                 <el-select v-model="info.city" placeholder="请选择">
-                  <el-option label="湖南省" value="0"></el-option>
-                  <el-option label="长沙市" value="1"></el-option>
+                  <el-option v-for="(item, index) in cityChoseList" :key="index + 'city'"
+                    :label="item.cityName" :value="item.cityName"></el-option>
                 </el-select>
               </el-form-item>
             </el-form>
@@ -90,7 +90,8 @@
 </template>
 
 <script>
-import { addKeyperson, queryTaskNumKP, queryWarn, warnAdd } from '@/api/task'
+import { addKeyperson, queryTaskNumKP, queryWarn, warnAdd, updateWarnTask,
+  hnCity, deleteTaskKP } from '@/api/task'
 export default {
   name: "personOut",
   data() {
@@ -115,7 +116,12 @@ export default {
       info: {
         level: '1', // 漫出漫入级别 1省级，2市级
         city: ''
-      }
+      },
+      cityChoseList: [],
+      proList: [
+        { cityName: '湖南省' }
+      ],
+      cityList: []
     }
   },
   computed: {
@@ -130,40 +136,53 @@ export default {
       }
     }
   },
+  watch: {
+    'info.level'(newval) {
+      if (newval) {
+        this.info.city = ''
+        if (newval === '1') {
+          // 漫出漫入级别 1省级，2市级
+          this.cityChoseList = this.proList
+        } else {
+          this.cityChoseList = this.cityList
+        }
+      }
+    }
+  },
   created() {
   },
   mounted() {
     this.warnTypeId = sessionStorage.getItem('warnTypeId')
     this.text = this.warnTypeId === '3' ? '漫出' : '漫入'
     this.warnHandle = sessionStorage.getItem('warnHandle')
-    this.taskNum = parseInt(sessionStorage.getItem('taskNum'))
+    this.taskNum = sessionStorage.getItem('taskNum')
+    this.getCityList()
+    this.cityChoseList = this.proList
     if (this.warnHandle === '修改') {
       this.getNumberData()
       this.getQueryWarnInfo()
     }
   },
   methods: {
+    // 获取湖南省所有市的名字
+    getCityList() {
+      hnCity().then( res => {
+        this.cityList = res.data
+      })
+    },
     // 任务目标号码 获取表格数据
     getNumberData() {
-      this.numberData = [
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-      ]
+      // this.numberData = [
+      //   { name: 'aa', phone: '123', type: 'a' },
+      //   { name: 'aa', phone: '123', type: 'a' },
+      // ]
       queryTaskNumKP(Object.assign(this.numberParams, {
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
       })).then( res => {
-        let { data, count } = res
+        let { data, total } = res
         this.numberData = data
-        this.numberTableCount = parseInt(count)
+        this.numberTableCount = parseInt(total)
       })
     },
     // 任务目标号码 表格选择框
@@ -175,12 +194,12 @@ export default {
       this.numberParams.pageSize = val
       this.numberTableCount = 1
       this.numberParams.pageNum = 1
-      this.getTableData()
+      this.getNumberData()
     },
     numberCurrentChange(val) {
       this.numberParams.pageNum = val
       this.numberTableCount = val
-      this.getTableData()
+      this.getNumberData()
     },
     // 新增目标号码
     addNumber() {
@@ -200,20 +219,16 @@ export default {
       }
       let kpids = []
       this.numberAddChosed.forEach(item => {
-        kpids.push(item.kpName)
+        kpids.push(item.id)
       })
       addKeyperson({
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
         kpids
       }).then( res => {
-        this.$message.success(res.msg)
         this.dialogVisible = false
         this.getNumberData()
       })
-      // this.$message.success('新增成功')
-      // this.dialogVisible = false
-      // this.getNumberData()
     },
     // 删除目标号码
     deleteNumber() {
@@ -222,8 +237,17 @@ export default {
         this.$message.warning('请至少选择一条数据')
         return
       }
-      this.$message.success('删除成功')
-      this.getNumberData()
+      let kpIds = []
+      this.numberChosed.forEach(item => {
+        kpIds.push(item.id)
+      })
+      deleteTaskKP({
+        taskNum: this.taskNum,
+        warnType: this.warnTypeId,
+        kpIds
+      }).then( res => {
+        this.getNumberData()
+      })
     },
     // 获取任务目标漫出级别
     getQueryWarnInfo() {
@@ -231,7 +255,11 @@ export default {
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
       }).then( res => {
-        this.info = res.data
+        this.info.level = res.data.level
+        this.$nextTick(() => {
+          this.info.city = res.data.city
+        })
+        
       })
     },
     // 保存
@@ -241,13 +269,15 @@ export default {
           taskNum: this.taskNum,
           warnType: this.warnTypeId,
         })).then( res => {
-          this.$message.success(res.msg)
           this.$emit('warnConfig', false)
         })
       } else {
-        // 修改应该也有接口
-        this.$message.success('新增成功')
-        this.$emit('warnConfig', false)
+        updateWarnTask(Object.assign(this.info, {
+          taskNum: this.taskNum,
+          warnType: this.warnTypeId,
+        })).then( res => {
+          this.$emit('warnConfig', false)
+        })
       }
     },
     // 取消

@@ -98,26 +98,22 @@
     <el-dialog :title="dialogTtitle" :visible.sync="dialogVisible" width="40%" @closed="dialogClosed">
       <el-form ref="ruleForm" :model="ruleForm" :rules="rules" class="demo-ruleForm" label-width="100px"
                 size="mini">
-        <el-form-item label="区域编号" prop="areaNum">
+        <!-- <el-form-item label="区域编号" prop="areaNum">
           <el-input v-model="ruleForm.areaNum" placeholder="请输入"></el-input>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="区域名称" prop="areaName">
           <el-input v-model="ruleForm.areaName" placeholder="请输入"></el-input>
         </el-form-item>
         <el-form-item label="服务单位" prop="serviceUnit">
-          <el-input v-model="ruleForm.serviceUnit" placeholder="请输入"></el-input>
+          <el-select v-model="ruleForm.serviceUnit" placeholder="请选择">
+            <el-option  v-for="(item, index) in unitList" :key="index + 'unit'"
+              :label="item" :value="item"></el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="经纬度集" prop="coordinate">
-          <el-input v-model="ruleForm.coordinate" type="textarea" 
+        <el-form-item label="经纬度集" prop="areaCoverage">
+          <el-input v-model="ruleForm.areaCoverage" type="textarea" 
             :rows="4" placeholder="请输入"></el-input>
         </el-form-item>
-
-        <template v-if="dialogTtitle === '修改区域'">
-          <el-form-item label="基站数量" prop="count" class="fromCount">
-            <el-input v-model="ruleForm.count" placeholder="请输入"></el-input>个
-          </el-form-item>
-        </template>
-
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm('ruleForm')" size="mini">确 定</el-button>
@@ -128,8 +124,9 @@
 </template>
 
 <script>
-import { keyAreasAll, keyAreasAdd, keyAreasUpdate, uliList,
-  keyAreasDelete } from '@/api/config'
+import { keyAreasAll, keyAreasAdd, keyAreasUpdate, keyAreaUliExport,
+  keyAreasDelete, keyAreaUli } from '@/api/config'
+import { serviceUigt } from '@/api/task'
 export default {
   name: "areaConfig",
   data() {
@@ -141,16 +138,17 @@ export default {
         pageSize: 5,
         pageNum: 1
       },
-      areaCount: 10,
+      areaCount: 0,
       areaCurrentPage: 1,
       // 基站列表
       checkAreaId: '',
+      checkAreaName: '',
       stationList: [],
       stationParams: {
         pageSize: 5,
         pageNum: 1
       },
-      stationCount: 10,
+      stationCount: 0,
       stationCurrentPage: 1,
       // 地图相关
       mapTool: false,
@@ -165,10 +163,11 @@ export default {
       dialogVisible: false,
       ruleForm: {
         areaName: '',
-        unit: '',
-        coordinate: '',
-        count: ''
+        serviceUnit: '',
+        areaCoverage: '',
+        radius: ''
       },
+      unitList: [],
       rules: {
         areaName: [
           { required: true, message: '请输入区域名称', trigger: 'blur' }
@@ -190,9 +189,16 @@ export default {
   created() {
   },
   mounted() {
+    this.getUnitData()
     this.getAreaData()
   },
   methods: {
+    // 获取所有服务单位
+    getUnitData() {
+      serviceUigt().then( res => {
+        this.unitList = res.data
+      })
+    },
     // 新增
     addArea() {
       this.modifyBtn = false
@@ -206,15 +212,14 @@ export default {
         this.$message.warning('请至少选择一条数据')
         return
       }
-      let kpList = []
+      let kaList = []
       this.areaChosed.forEach(item => {
-        kpList.push(item.id)
+        kaList.push(item.id)
       })
       this.$confirm(`确认删除勾选的"${length}"条区域?`, '提示', {
         confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
       }).then(() => {
-        keyAreasDelete({ kpList }).then( res => {
-          this.$message.success('删除成功')
+        keyAreasDelete({ kaList }).then( res => {
           this.getAreaData()
         })
       }).catch(() => {
@@ -224,26 +229,20 @@ export default {
     },
     // 获取区域列表
     getAreaData() {
-      this.areaList = [
-        { areaName: 'aa1', areaNum: '123', serviceUnit: 'a', uliCount: '11'},
-        { areaName: 'aa2', areaNum: '124', serviceUnit: 'a', uliCount: '222'},
-      ]
-      keyAreasAll().then( res => {
-        let { data, count } = res
+      keyAreasAll(this.areaParams).then( res => {
+        let { data, total } = res
         this.areaList = data
-        this.areaCount = parseInt(count)
+        this.areaCount = parseInt(total)
+        // 显示第一个区域的基站列表和地图边框
+        this.$nextTick(() => {
+          if (this.areaList.length !== 0) {
+            this.checkAreaId = this.areaList[0].areaNum
+            this.getStationData()
+            this.getAreaBorder(this.areaList[0].areaCoverage, this.areaList[0].radius)
+            this.mapData.cellInfo = this.areaList[0].areaUliList
+          }
+        })
       })
-      // 显示第一个区域的基站列表和地图边框
-      // this.$nextTick(() => {
-      //    this.checkAreaId = this.areaList[0].id
-      //    this.getStationData()
-      //    this.getAreaBorder(this.areaList[0].areaCoverage)
-      // })
-      setTimeout(() => {
-        this.getStationData()
-        let data = '112.958656 28.200233,112.981509 28.200742,112.979353 28.185715,112.955638 28.188899'
-        this.getAreaBorder(data)
-      }, 1000)
     },
     // 表格选择框
     handleSelection(val) {
@@ -254,22 +253,23 @@ export default {
       this.$refs.areaMap.clearAll()
       this.modifyBtn = false
       this.mapTool = false
-      // this.checkAreaId = row.id
-      // this.getStationData()
-      // this.getAreaBorder(row.areaCoverage)
-      let data = '112.958656 28.200233,112.981509 28.200742,112.979353 28.185715'
-      this.getAreaBorder(data)
+      this.checkAreaId = row.areaNum
       this.getStationData()
+      this.getAreaBorder(row.areaCoverage, row.radius)
+      this.mapData.cellInfo = row.areaUliList
     },
     // 修改
     editArea(row) {
       // 编辑的时候点修改，应先获取当前行区域的边框和基站点
       if (this.mapTool) {
         this.$refs.areaMap.clearAll()
-        this.getAreaBorder()
         this.mapTool = false
       }
+      this.checkAreaId = row.areaNum
+      this.getAreaBorder(row.areaCoverage, row.radius)
+      this.mapData.cellInfo = row.areaUliList
       this.$nextTick(() => {
+        
         this.modifyBtn = true
         this.$refs.areaMap.areaEdit()
       })
@@ -289,7 +289,7 @@ export default {
       this.getAreaData()
     },
     // 获取区域边框 数据
-    getAreaBorder(data) {
+    getAreaBorder(data, radius) {
       let list = data.split(',')
       let border = []
       list.forEach(item => {
@@ -299,9 +299,16 @@ export default {
         )
       })
       this.mapData.areaBorder = border
+      this.mapData.radius = radius
     },
     // 保存 新增 区域
     keepArea() {
+      this.ruleForm = {
+        areaName: '',
+        serviceUnit: '',
+        areaCoverage: '',
+        radius: ''
+      }
       this.areaBorder = this.$refs.areaMap.getOverLayData()
       if (!this.areaBorder) {
         this.$message.warning('请框选区域！')
@@ -311,8 +318,8 @@ export default {
         this.dialogVisible = true
         this.dialogTtitle = '新增区域'
         // 将获得的经纬度填入表单
-        console.log(this.areaBorder)
-        this.ruleForm.coordinate = this.areaBorder.coordinates
+        this.ruleForm.areaCoverage = this.areaBorder.areaCoverage
+        this.ruleForm.radius = this.areaBorder.radius
       }
     },
     // 取消 新增 区域
@@ -325,8 +332,10 @@ export default {
       this.dialogVisible = true
       this.dialogTtitle = '修改区域'
       let areaBorder = this.$refs.areaMap.getModifyBorder()
+      delete this.modifyRow.areaUliList
       this.ruleForm = this.modifyRow
-      this.ruleForm.coordinate = areaBorder
+      this.ruleForm.areaCoverage = areaBorder.areaCoverage
+      this.ruleForm.radius = areaBorder.radius
     },
     // 取消 修改 区域
     cancelModify() {
@@ -343,18 +352,15 @@ export default {
       this.$refs[formName].validate((valid) => {
         if (valid) {
           if (this.dialogTtitle === '新增区域') {
-            console.log('新增')
             this.dialogVisible = false
             keyAreasAdd(this.ruleForm).then( res => {
-              this.$message.success(res.msg)
               this.dialogVisible = false
               this.getAreaData()
             })
           } else {
-            console.log('修改')
             this.dialogVisible = false
+            
             keyAreasUpdate(this.ruleForm).then( res => {
-              this.$message.success(res.msg)
               this.dialogVisible = false
               this.getAreaData()
             })
@@ -367,24 +373,17 @@ export default {
     },
     // 获取基站列表
     getStationData() {
-      this.mapData.cellInfo = [
-        { lon: '112.96843', lat: '28.197177' },
-        { lon: '112.962537', lat: '28.191955' },
-        { lon: '112.967855', lat: '28.186097' },
-      ]
-      this.stationList = [
-        { uli: '123', address: 'a', owner: '222'},
-        { uli: '123', address: 'a', owner: '222'},
-        { uli: '123', address: 'a', owner: '222'},
-      ]
-      // uliList({
-      //   id: this.checkAreaId
-      // }).then( res => {
-      //   let { data, count } = res
-      //   this.stationList = data
-      //   this.stationCount = parseInt(count)
-      //   this.mapData.cellInfo = data
-      // })
+      // this.stationList = [
+      //   { uli: '123', address: 'a', owner: '222'},
+      //   { uli: '123', address: 'a', owner: '222'},
+      // ]
+      keyAreaUli(Object.assign(this.stationParams, {
+        keyAreaNum: this.checkAreaId
+      })).then( res => {
+        let { data, total } = res
+        this.stationList = data
+        this.stationCount = parseInt(total)
+      })
     },
     // 基站列表 表格分页
     stationHandleSizeChange(val) {
@@ -400,28 +399,18 @@ export default {
     },
     // 导出
     exportList() {
-      let length = this.areaChosed.length
-      if (length !== 1) {
-        this.$message.warning('请选择一个区域')
-        return
-      }
-      this.$confirm(`您确定导出当前选中的"${this.areaChosed[0].areaName}"区域基站到EXCEL文件吗?`, '提示', {
-        confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
-      }).then(() => {
-        this.$message.success('导出成功')
-        keyAreaUliExport().then(res=>{
-          let blob = new Blob([res], {type: "application/msexecl,charset=utf-8"});// 创建一个类文件对象：Blob对象表示一个不可变的、原始数据的类文件对象
-          const elink = document.createElement('a')// 创建一个a标签
-          elink.download = this.chosed[0].templateName;// 设置a标签的下载属性
-          elink.style.display = 'none';// 将a标签设置为隐藏
-          elink.href = URL.createObjectURL(blob);// 把之前处理好的地址赋给a标签的href
-          document.body.appendChild(elink);// 将a标签添加到body中
-          elink.click();// 执行a标签的点击方法
-          URL.revokeObjectURL(elink.href) // 下载完成释放URL 对象
-          document.body.removeChild(elink)// 移除a标签
-        })
-      }).catch(() => {
-        this.$message.info('已取消导出')
+      keyAreaUliExport({
+        keyAreaNum: this.checkAreaId
+      }).then(res=>{
+        let blob = new Blob([res], {type: "application/vnd.ms-excel,charset=utf-8"});// 创建一个类文件对象：Blob对象表示一个不可变的、原始数据的类文件对象
+        const elink = document.createElement('a')// 创建一个a标签
+        elink.download = this.checkAreaId;// 设置a标签的下载属性
+        elink.style.display = 'none';// 将a标签设置为隐藏
+        elink.href = URL.createObjectURL(blob);// 把之前处理好的地址赋给a标签的href
+        document.body.appendChild(elink);// 将a标签添加到body中
+        elink.click();// 执行a标签的点击方法
+        URL.revokeObjectURL(elink.href) // 下载完成释放URL 对象
+        document.body.removeChild(elink)// 移除a标签
       })
     }
   },

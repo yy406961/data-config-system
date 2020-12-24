@@ -10,8 +10,8 @@
           <el-form-item label="身份证号:" prop="idCard">
             <el-input v-model="query.idCard" placeholder="请输入"></el-input>
           </el-form-item>
-          <el-form-item label="手机号码:" prop="kdMsisdn">
-            <el-input v-model="query.kdMsisdn" placeholder="请输入"></el-input>
+          <el-form-item label="手机号码:" prop="kpMsisdn">
+            <el-input v-model="query.kpMsisdn" placeholder="请输入"></el-input>
           </el-form-item>
           <el-form-item label="管辖单位:" prop="mgUnit">
               <el-input v-model="query.mgUnit" placeholder="请输入"></el-input>
@@ -62,7 +62,7 @@
           ref="upload"
           :file-list="fileList"
           :http-request="importBtn"
-          accept=".doc, .docx, .xlsx, .xls"
+          accept=".xlsx, .xls"
           action= '#'
           class="upload">
           <el-button class="upload-btn" icon="el-icon-upload" size="mini" type="primary">批量导入</el-button>
@@ -125,7 +125,7 @@
         <el-form-item label="人员籍贯" prop="kpPlace">
             <el-input v-model="ruleForm.kpPlace" placeholder="请输入"></el-input>
         </el-form-item>
-        <el-form-item label="电话号码" prop="kpMsisdn">
+        <el-form-item label="手机号码" prop="kpMsisdn">
             <el-input v-model="ruleForm.kpMsisdn" placeholder="请输入"></el-input>
         </el-form-item>
         <el-form-item label="号码归属地" prop="msisdnOwner">
@@ -143,21 +143,9 @@
             <el-option label="否" value="0"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="是否同步" prop="stutas">
-          <el-select v-model="ruleForm.stutas" placeholder="请选择">
-            <el-option label="是" value="1"></el-option>
-            <el-option label="否" value="2"></el-option>
-          </el-select>
+        <el-form-item label="服务单位" prop="serviceUnit">
+          <el-input v-model="ruleForm.serviceUnit" placeholder="请输入"></el-input>
         </el-form-item>
-        <!-- <el-form-item label="状态" prop="phone">
-          <el-input v-model="ruleForm.phone" placeholder="请输入"></el-input>
-        </el-form-item>
-        <el-form-item label="最后捕获时间" prop="phone">
-          <el-input v-model="ruleForm.phone" placeholder="请输入"></el-input>
-        </el-form-item>
-        <el-form-item label="基站地址" prop="phone">
-          <el-input v-model="ruleForm.phone" placeholder="请输入"></el-input>
-        </el-form-item> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm('ruleForm')" size="mini">确 定</el-button>
@@ -179,12 +167,12 @@ export default {
       query: {
         kpName: '',
         idCard: '',
-        kdMsisdn: '',
+        kpMsisdn: '',
         mgUnit: '',
         kpType: '',
         stutas: '',
         control: '',
-        state: ''
+        serviceUnit: ''
       },
       detailSearch: false,
       tableChosed: [],
@@ -207,11 +195,26 @@ export default {
         kpType: '',
         mgUnit: '',
         control: '',
-        stutas: ''
+        serviceUnit: ''
       },
       rules: {
         kpName: [
           { required: true, message: '请输入姓名', trigger: 'blur' }
+        ],
+        idCard: [
+          { required: true, message: '请输入身份证号码', trigger: 'blur' }
+        ],
+        kpMsisdn: [
+          { required: true, message: '请输入手机号码', trigger: 'blur' }
+        ],
+        kpType: [
+          { required: true, message: '请输入重点人类型', trigger: 'blur' }
+        ],
+        mgUnit: [
+          { required: true, message: '请输入管辖单位', trigger: 'blur' }
+        ],
+        serviceUnit: [
+          { required: true, message: '请输入服务单位', trigger: 'blur' }
         ]
       },
       fileList: [],
@@ -234,19 +237,18 @@ export default {
   methods: {
     // 获取表格数据
     getTableData() {
-      this.listData = [
-        { id: 1, kpName: 'aa', idCard: '123', kpType: 'a', mgUnit: 'b', kpMsisdn: '222'},
-        { id: 2, kpName: 'aa', idCard: '123', kpType: 'a', mgUnit: 'b', kpMsisdn: '222'},
-      ]
+      // this.listData = [
+      //   { id: 1, kpName: 'aa', idCard: '123', kpType: 'a', mgUnit: 'b', kpMsisdn: '222'},
+      //   { id: 2, kpName: 'aa', idCard: '123', kpType: 'a', mgUnit: 'b', kpMsisdn: '222'},
+      // ]
       pageAll(Object.assign(this.params, this.query)).then( res => {
-        let { data, count } = res
+        let { data, total } = res
         this.listData = data
-        this.tableCount = parseInt(count)
+        this.tableCount = parseInt(total)
       })
     },
     // 查询
     userQuery() {
-      console.log(this.query)
       this.params.pageNum = 1
       this.currentPage = 1
       this.getTableData()
@@ -318,27 +320,30 @@ export default {
     // 模板下载
     modeDownload() {
       downloadExcelTemplate().then(res=>{
-        this.exportFun(res)
+        this.exportFun(res, '模板')
       })
     },
     // 下载方法
-    exportFun(data) {
-      let blob = new Blob([data], {type: "application/msexecl,charset=utf-8"});// 创建一个类文件对象：Blob对象表示一个不可变的、原始数据的类文件对象
+    exportFun(data, name) {
+      let blob = new Blob([data], {type: "application/vnd.ms-excel,charset=utf-8"}) // 创建一个类文件对象：Blob对象表示一个不可变的、原始数据的类文件对象
       const elink = document.createElement('a')// 创建一个a标签
-      elink.download = this.chosed[0].templateName;// 设置a标签的下载属性
-      elink.style.display = 'none';// 将a标签设置为隐藏
-      elink.href = URL.createObjectURL(blob);// 把之前处理好的地址赋给a标签的href
-      document.body.appendChild(elink);// 将a标签添加到body中
-      elink.click();// 执行a标签的点击方法
+      elink.download = name // 设置a标签的下载属性
+      elink.style.display = 'none' // 将a标签设置为隐藏
+      elink.href = URL.createObjectURL(blob) // 把之前处理好的地址赋给a标签的href
+      document.body.appendChild(elink) // 将a标签添加到body中
+      elink.click() // 执行a标签的点击方法
       URL.revokeObjectURL(elink.href) // 下载完成释放URL 对象
-      document.body.removeChild(elink)// 移除a标签
+      document.body.removeChild(elink) // 移除a标签
     },
     // 批量导入
     importBtn(params) {
       let file = new FormData()
-      file.append('files',params.file)
+      file.append('file',params.file)
       bacthAddkeyPerson(file).then( res => {
-        this.$message.success('上传成功')
+        this.$message.success(res.msg)
+        this.params.pageNum = 1
+        this.currentPage = 1
+        this.getTableData()
       })
     },
     // 重点人信息导出
@@ -356,7 +361,7 @@ export default {
         confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
       }).then(() => {
         exportExcel({ kpList }).then( res => {
-          this.exportFun(res)
+          this.exportFun(res, '重点人信息')
         })
       }).catch(() => {
         this.$message.info('已取消导出')
@@ -397,18 +402,14 @@ export default {
       this.$refs[formName].validate((valid) => {
         if (valid) {
           if (this.dialogTtitle === '新增') {
-            console.log('新增')
             this.dialogVisible = false
             addKeyPerson(this.ruleForm).then( res => {
-              this.$message.success(res.msg)
               this.dialogVisible = false
               this.getTableData()
             })
           } else {
-            console.log('修改')
             this.dialogVisible = false
             keyPersonUpdate(this.ruleForm).then( res => {
-              this.$message.success(res.msg)
               this.dialogVisible = false
               this.getTableData()
             })

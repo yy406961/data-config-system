@@ -48,7 +48,6 @@ export default {
   },
   methods: {
     tabsChange(item, index) {
-      console.log(item, index)
       this.$router.push({ path: item.path })
     },
     returnBack() {

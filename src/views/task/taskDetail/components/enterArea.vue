@@ -36,9 +36,9 @@
             @selection-change="numberSelection">
             <el-table-column type="selection" width="45"></el-table-column>
             <el-table-column type="index" label="序号" width="55" align="center"></el-table-column>
-            <el-table-column label="姓名" prop="name" align="center"></el-table-column>
-            <el-table-column label="手机号码" prop="phone" align="center"></el-table-column>
-            <el-table-column label="关注人员类型" prop="type" align="center"></el-table-column>
+            <el-table-column label="姓名" prop="kpName" align="center"></el-table-column>
+            <el-table-column label="手机号码" prop="kpMsisdn" align="center"></el-table-column>
+            <el-table-column label="关注人员类型" prop="kpType" align="center"></el-table-column>
           </el-table>
           <el-pagination
             :page-size="1"
@@ -68,10 +68,10 @@
             @selection-change="areaSelection">
             <el-table-column type="selection" width="45"></el-table-column>
             <el-table-column type="index" label="序号" width="55" align="center"></el-table-column>
-            <el-table-column label="区域编号" prop="id" align="center"></el-table-column>
-            <el-table-column label="区域名称" prop="name" align="center"></el-table-column>
+            <el-table-column label="区域编号" prop="areaNum" align="center"></el-table-column>
+            <el-table-column label="区域名称" prop="areaName" align="center"></el-table-column>
             <el-table-column label="区域基站数量" prop="count" align="center"></el-table-column>
-            <el-table-column label="服务耽误" prop="unit" align="center"></el-table-column>
+            <el-table-column label="服务单位" prop="serviceUnit" align="center"></el-table-column>
           </el-table>
           <el-pagination
             :page-size="1"
@@ -94,7 +94,7 @@
     </div>
     <!-- 目标号码新增  -->
     <el-dialog title="添加任务目标号码" :visible.sync="dialogVisible" width="100%" top="10vh">
-      <targetNumber @numberAdd="numberAdd"></targetNumber>
+      <targetNumber v-if="dialogVisible" @numberAdd="numberAdd"></targetNumber>
       <div slot="footer" class="dialog-footer">
         <el-button size="mini" type="primary" @click="submitForm">确 定</el-button>
         <el-button size="mini" @click="dialogVisible = false">取 消</el-button>
@@ -102,7 +102,7 @@
     </el-dialog>
     <!-- 添加任务目标区域  -->
     <el-dialog title="添加任务目标区域" :visible.sync="areaDialogVisible" width="100%" top="10vh">
-      <targetArea @areaAdd="areaAdd"></targetArea>
+      <targetArea v-if="areaDialogVisible" @areaAdd="areaAdd"></targetArea>
       <div slot="footer" class="dialog-footer">
         <el-button size="mini" type="primary" @click="submitArea">确 定</el-button>
         <el-button size="mini" @click="areaDialogVisible = false">取 消</el-button>
@@ -112,7 +112,8 @@
 </template>
 
 <script>
-import { addKeyperson, addWarnArea, queryTaskNumKP, queryTaskNumKA } from '@/api/task'
+import { addKeyperson, addWarnArea, queryTaskNumKP, queryTaskNumKA,
+  warnAdd, updateWarnTask, deleteTaskKP, deleteTaskKeyArea } from '@/api/task'
 export default {
   name: "enterArea",
   data() {
@@ -157,7 +158,7 @@ export default {
   mounted() {
     this.warnTypeId = sessionStorage.getItem('warnTypeId')
     this.warnHandle = sessionStorage.getItem('warnHandle')
-    this.taskNum = parseInt(sessionStorage.getItem('taskNum'))
+    this.taskNum = sessionStorage.getItem('taskNum')
     if (this.warnHandle === '修改') {
       this.getNumberData()
       this.getAreaData()
@@ -168,24 +169,17 @@ export default {
     // 任务目标号码 获取表格数据
     getNumberData() {
       this.numberData = [
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
-        { name: 'aa', phone: '123', type: 'a' },
+        // { name: 'aa', phone: '123', type: 'a' },
+        // { name: 'aa', phone: '123', type: 'a' },
+        // { name: 'aa', phone: '123', type: 'a' }
       ]
       queryTaskNumKP(Object.assign(this.numberParams, {
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
       })).then( res => {
-        let { data, count } = res
+        let { data, total } = res
         this.numberData = data
-        this.numberTableCount = parseInt(count)
+        this.numberTableCount = parseInt(total)
       })
     },
     // 任务目标号码 表格选择框
@@ -197,12 +191,12 @@ export default {
       this.numberParams.pageSize = val
       this.numberTableCount = 1
       this.numberParams.pageNum = 1
-      this.getTableData()
+      this.getNumberData()
     },
     numberCurrentChange(val) {
       this.numberParams.pageNum = val
       this.numberTableCount = val
-      this.getTableData()
+      this.getNumberData()
     },
     // 新增目标号码
     addNumber() {
@@ -219,8 +213,19 @@ export default {
         this.$message.warning('请至少选择一条数据')
         return
       }
-      this.$message.success('删除成功')
-      this.getNumberData()
+      let kpIds = []
+      this.numberChosed.forEach(item => {
+        kpIds.push(item.id)
+      })
+      deleteTaskKP({
+        taskNum: this.taskNum,
+        warnType: this.warnTypeId,
+        kpIds
+      }).then( res => {
+        if (res.code === 200) {
+          this.getNumberData()
+        }
+      })
     },
     // 添加任务目标号码确认
     submitForm() {
@@ -232,38 +237,36 @@ export default {
       }
       let kpids = []
       this.numberAddChosed.forEach(item => {
-        kpids.push(item.kpName)
+        kpids.push(item.id)
       })
       addKeyperson({
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
         kpids
       }).then( res => {
-        this.$message.success(res.msg)
-        this.dialogVisible = false
-        this.getNumberData()
+        if (res.code === 200) {
+          this.dialogVisible = false
+          this.getNumberData()
+        }
       })
-      // this.$message.success('新增成功')
-      // this.dialogVisible = false
-      // this.getNumberData()
     },
     // ----------------------------------------- 任务目标区域 -------------------------------------
     // 任务目标区域 获取表格数据
     getAreaData() {
-      this.areaData = [
-        { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
-        { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
-        { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
-        { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
-        { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
-      ]
+      // this.areaData = [
+      //   { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
+      //   { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
+      //   { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
+      //   { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
+      //   { id: 1001, name: '省政府', count: '128', unit: 'FK总队/长沙网技' },
+      // ]
       queryTaskNumKA(Object.assign(this.areaParams, {
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
       })).then( res => {
-        let { data, count } = res
+        let { data, total } = res
         this.areaData = data
-        this.areaTableCount = parseInt(count)
+        this.areaTableCount = parseInt(total)
       })
     },
     // 任务目标区域 表格选择框
@@ -275,12 +278,12 @@ export default {
       this.areaParams.pageSize = val
       this.areaTableCount = 1
       this.areaParams.pageNum = 1
-      this.getTableData()
+      this.getAreaData()
     },
     areaCurrentChange(val) {
       this.areaParams.pageNum = val
       this.areaTableCount = val
-      this.getTableData()
+      this.getAreaData()
     },
     // 新增区域
     addArea() {
@@ -300,20 +303,18 @@ export default {
       }
       let areaList = []
       this.areaAddChosed.forEach(item => {
-        areaList.push(item.areaNum)
+        areaList.push(item.id)
       })
       addWarnArea({
         taskNum: this.taskNum,
         warnType: this.warnTypeId,
         areaList
       }).then( res => {
-        this.$message.success(res.msg)
-        this.areaDialogVisible = false
-        this.getAreaData()
+        if (res.code === 200) {
+          this.areaDialogVisible = false
+          this.getAreaData()
+        }
       })
-      // this.$message.success('新增成功')
-      // this.areaDialogVisible = false
-      // this.getAreaData()
     },
     // 删除区域
     deleteArea() {
@@ -322,14 +323,38 @@ export default {
         this.$message.warning('请至少选择一条数据')
         return
       }
-      this.$message.success('删除成功')
-      this.getAreaData()
+      let areaNums = []
+      this.areaChosed.forEach(item => {
+        areaNums.push(item.areaNum)
+      })
+      deleteTaskKeyArea({
+        taskNum: this.taskNum,
+        warnType: this.warnTypeId,
+        areaNums
+      }).then( res => {
+        if (res.code === 200) {
+          this.getAreaData()
+        }
+      })
     },
     // ---------------------------------------- 保存 取消 ------------------------------------
     // 保存
     addConfig() {
-      this.$message.success('保存成功')
-      this.$emit('warnConfig', false)
+      if (this.warnHandle === '新增') {
+        warnAdd({
+          taskNum: this.taskNum,
+          warnType: this.warnTypeId
+        }).then( res => {
+          this.$emit('warnConfig', false)
+        })
+      } else {
+        updateWarnTask({
+          taskNum: this.taskNum,
+          warnType: this.warnTypeId
+        }).then( res => {
+          this.$emit('warnConfig', false)
+        })
+      }
     },
     // 取消
     goback() {

@@ -36,8 +36,8 @@ export default {
   data() {
     return {
       loginForm: {
-        userName: '',
-        password: ''
+        userName: 'admin',
+        password: '123456'
       },
       rule: {
         userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
@@ -48,6 +48,7 @@ export default {
   created() {
   },
   mounted() {
+    // this.login('form')
   },
   methods: {
     login(formName) {

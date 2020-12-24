@@ -7,7 +7,7 @@
  * @FilePath: \data-config-system\src\api\config.js
  */
 import { fetchGet, fetchPost } from '@/common/axios.js'
-import { download } from '@/common/download.js'
+import { download, downloadPost } from '@/common/download.js'
 import { uploadPost } from '@/common/upload.js'
 
 /**
@@ -28,13 +28,13 @@ export const keyPersonControl = params => fetchPost('/keyPerson/keyPersonControl
 export const keyPersonAllControl = params => fetchPost('/keyPerson/keyPersonAllControl', params)
 
 // 重点人模板下载
-export const downloadExcelTemplate  = params => download('/keyPerson/downloadExcelTemplate', params)
+export const downloadExcelTemplate  = params => downloadPost('/keyPerson/downloadExcelTemplate', params)
 
 // 重点人批量上传
 export const bacthAddkeyPerson  = params => uploadPost('/keyPerson/bacthAddkeyPerson', params)
 
 // 数据导出excel
-export const exportExcel  = params => download('/keyPerson/exportExcel', params)
+export const exportExcel  = params => downloadPost('/keyPerson/exportExcel', params)
 
 // 下控
 export const keyPersonUnlock = params => fetchPost('/keyPerson/keyPersonUnlock', params)
@@ -42,9 +42,15 @@ export const keyPersonUnlock = params => fetchPost('/keyPerson/keyPersonUnlock',
 // 重点人员信息修改
 export const keyPersonUpdate = params => fetchPost('/keyPerson/keyPersonUpdate', params)
 
+// 获取所有重点人类型
+export const getKeyPersonType = params => fetchPost('/warnInto/getKeyPersonType', params)
+
 // ---------------------------------------  区域配置 -------------------------------------------------
 // 查询重点区域
 export const keyAreasAll = params => fetchPost('/keyAreas/keyAreasAll', params)
+
+// 根据区域编号查询区域基站
+export const keyAreaUli = params => fetchPost('/keyAreas/keyAreaUli', params)
 
 // 新增重点区域
 export const keyAreasAdd = params => fetchPost('/keyAreas/keyAreasAdd', params)
@@ -59,4 +65,4 @@ export const uliList = params => fetchPost('/keyAreas/uliList', params)
 export const keyAreasDelete = params => fetchPost('/keyAreas/keyAreasDelete', params)
 
 // 根据区域导出区域基站
-export const keyAreaUliExport  = params => download('/keyAreas/keyAreaUliExport', params)
+export const keyAreaUliExport  = params => downloadPost('/keyAreas/keyAreaUliExport', params)

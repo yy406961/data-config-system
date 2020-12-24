@@ -12,9 +12,9 @@ import QS from 'qs'
 import {showLoading, hideLoading} from '@/util/loading'
 
 const service = axios.create({
-    baseURL: '/api',
-    // baseURL: 'http://rap2api.taobao.org/app/mock/268576/',
-    timeout: 3000,
+    baseURL: '/keyBigDate',
+    // baseURL: 'api',
+    timeout: 8000,
     withCredentials: true
 })
 

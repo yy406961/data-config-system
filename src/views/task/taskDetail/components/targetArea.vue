@@ -10,8 +10,8 @@
   <div class="targetArea">
     <div class="formPart">
       <el-form ref="queryFrom" :model="query" :inline="true" size="mini" label-width="100px">
-        <el-form-item label="区域名称:" prop="areaName">
-            <el-input v-model="query.areaName" placeholder="请输入"></el-input>
+        <el-form-item label="区域名称:" prop="keyAreaName">
+            <el-input v-model="query.keyAreaName" placeholder="请输入"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button class="hvr-glow" size="mini" type="primary" @click="areaQuery">查询</el-button>
@@ -51,7 +51,7 @@ export default {
   data() {
     return {
       query: {
-        name: ''
+        keyAreaName: ''
       },
       listData: [],
       params: {
@@ -77,17 +77,17 @@ export default {
     },
     // 获取表格数据
     getTableData() {
-      this.listData = [
-        { areaName: '区域1', areaNum: '123', serviceUnit: 'FK总队/长沙网技', uliCount: '222'},
-        { areaName: '区域2', areaNum: '124', serviceUnit: 'FK总队/长沙网技', uliCount: '222'},
-        { areaName: '区域3', areaNum: '125', serviceUnit: 'FK总队/长沙网技', uliCount: '222'},
-        { areaName: '区域4', areaNum: '126', serviceUnit: 'FK总队/长沙网技', uliCount: '222'},
-        { areaName: '区域5', areaNum: '127', serviceUnit: 'FK总队/长沙网技', uliCount: '222'}
-      ]
-      getKeyArea().then( res => {
-        let { data, count } = res
+      // this.listData = [
+      //   { areaName: '区域1', areaNum: '123', serviceUnit: 'FK总队/长沙网技', uliCount: '222'},
+      //   { areaName: '区域2', areaNum: '124', serviceUnit: 'FK总队/长沙网技', uliCount: '222'},
+      //   { areaName: '区域3', areaNum: '125', serviceUnit: 'FK总队/长沙网技', uliCount: '222'},
+      //   { areaName: '区域4', areaNum: '126', serviceUnit: 'FK总队/长沙网技', uliCount: '222'},
+      //   { areaName: '区域5', areaNum: '127', serviceUnit: 'FK总队/长沙网技', uliCount: '222'}
+      // ]
+      getKeyArea(Object.assign(this.params, this.query)).then( res => {
+        let { data, total } = res
         this.listData = data
-        this.tableCount = parseInt(count)
+        this.tableCount = parseInt(total)
       })
     },
     // 表格选择框
